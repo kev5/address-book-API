@@ -253,22 +253,3 @@ router.route('/contact/:name')
     });
 
 module.exports = router;
-
-/*
-
-GET all
-$ curl -X GET "http://localhost:8080/?pageSize={10}&page={1}&query={\"name\": \"jon\"}"
-
-GET one
-$ curl -X GET http://localhost:8080/contact/jon
-
-POST
-$ curl -H "Content-Type: application/json" -d "{\"name\": \"jon\", \"lastname\": \"doe\", \"email\": \"k@lol.com\", \"phone\": \"245566\", \"address\": \"heaven\"}" -X POST http://localhost:8080/contact/
-
-DELETE
-$ curl -X DELETE "http://localhost:8080/contact/jon"
-
-UPDATE
-$ curl -H "Content-Type: application/json" -d "{\"oldname\": \"jon\", \"newname\": \"John\"}" -X PUT http://localhost:8080/contact/jon
-
-*/
