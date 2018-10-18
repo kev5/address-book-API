@@ -45,7 +45,7 @@ $ curl -H "Content-Type: application/json" -d "{\"new_name\": \"John\", \"new_ph
 &nbsp;
 * **DELETE** - Delete an existing contact by passing their name
 
-`$ curl -X DELETE "http://localhost:8080/contact/jon"`
+`$ curl -X DELETE "http://localhost:8080/contact/John"`
 
 &nbsp;
 ## Testing
