@@ -202,26 +202,38 @@ router.route('/contact/:name')
             res.status(400).send("No such entry exists");
             return;
           }
+
+          // Avoiding null values to be updated
+          if (typeof input.new_name === 'undefined' || input.new_name === null)
+            input.new_name = Object.values(results)[0].name;
+          if (typeof input.new_phone === 'undefined' || input.new_phone === null)
+            input.new_phone = Object.values(results)[0].phone;
+          if (typeof input.new_address === 'undefined' || input.new_address === null)
+            input.new_address = Object.values(results)[0].address;
+          if (typeof input.new_email === 'undefined' || input.new_email === null)
+            input.new_email = Object.values(results)[0].email;
+          if (typeof input.new_lastname === 'undefined' || input.new_lastname === null)
+            input.new_lastname = Object.values(results)[0].lastname;
       });
 
       // Update the existing entry
-    	client.updateByQuery({ 
+    	client.updateByQuery({
           index: indexName,
           type: 'contact',
-          body: { 
+          body: {
             query: {
                 match: {name: my_name}
             },
-            "script":  "ctx._source.name = "+"'"+input.new_name +"'"+";"+"ctx._source.phone = "+"'"+input.new_phone +"'"+";"+"ctx._source.email = "+"'"+input.new_email +"'"+";"+"ctx._source.address = "+"'"+input.new_address +"'"+";"+"ctx._source.lastname = "+"'"+input.new_lastname +"'"+";"
+            "script": "ctx._source.name = "+"'"+input.new_name+"'"+";"+"ctx._source.phone = "+"'"+input.new_phone+"'"+";"+"ctx._source.email = "+"'"+input.new_email+"'"+";"+"ctx._source.address = "+"'"+input.new_address+"'"+";"+"ctx._source.lastname = "+"'"+input.new_lastname+"'"+";"
           }
       }, function(err, response) { 
             if (err) { 
                console.log(err);
                res.sendStatus(500);
-            } 
+            }
             console.log(response);
             res.status(200).send(response);
-        })
+      })
     });
 
 
