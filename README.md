@@ -24,15 +24,18 @@ $ curl -H "Content-Type: application/json" -d "{\"name\": \"jon\", \"lastname\":
 
 *Note that the double quotes are escaped here since I ran this on a Windows machine.*
 
-2. **GET** - Get a user using their name in the URL
+
+2. **GET** one - Get a user using their name in the URL
 
 `$ curl -X GET http://localhost:8080/contact/jon`
 
-3. **GET** - Get all users using additional parameters
+
+3. **GET** all - Get all users using additional parameters
 
 `$ curl -X GET "http://localhost:8080/?pageSize={10}&page={1}&query={\"name\": \"jon\"}"`
 
 Here, we have `pageSize` (number of results that are allowed back), `page` (get specific page numbers), and `query` which is a [Query String Query](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-query-string-query.html) as defined by Elasticsearch that you can pass directly in the Elasticsearch call.
+
 
 4. **UPDATE** - Update an existing contact by passing their name
 
@@ -40,9 +43,11 @@ Here, we have `pageSize` (number of results that are allowed back), `page` (get 
 $ curl -H "Content-Type: application/json" -d "{\"new_name\": \"John\", \"new_phone\": \"1234567890\"}" -X PUT http://localhost:8080/contact/jon
 ```
 
+
 5. **DELETE** - Delete an existing contact by passing their name
 
 `$ curl -X DELETE "http://localhost:8080/contact/jon"`
+
 
 ## Testing
 
