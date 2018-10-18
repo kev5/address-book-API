@@ -33,6 +33,7 @@ router.get('/', function(req, res) {
     });
 });
 
+
 /*
   Description. GET details of a contact with the name
   (accessed at GET http://localhost:8080/contact/:name)
@@ -53,7 +54,7 @@ router.route('/contact/:name')
                 }
             }
         }).then(function (resp) {
-             var results = resp.hits.hits.map(function(hit){
+            var results = resp.hits.hits.map(function(hit){
                 return hit._source;
             });
             console.log('GET results', results); //returns the list of the search
@@ -62,6 +63,7 @@ router.route('/contact/:name')
         
         });
     });
+
 
 /*
   Description. GET list of all contacts
@@ -110,6 +112,32 @@ router.route('/contact')
     .post(function(req, res) {
 
     	  var input = req.body;
+
+        // Check if an entry already exists
+        var my_name = req.params.name;
+        var my_lastname = req.params.lastname;
+        client.search({       //searching the elasticsearch index
+            index: indexName,
+            type: 'contact',
+            body: {
+                query: {
+                    match: {
+                        name: my_name,
+                        lastname: my_lastname
+                    }
+                }
+            }
+        }).then(function (resp) {
+            var results = resp.hits.hits.map(function(hit){
+                return hit._source;
+            });
+            if (results) {
+              res.status(400).send("Duplicate entry already exists");
+              return;
+            }
+        });
+
+        // POST new entry
         client.index({           //client.index is the elasticsearch.js method to insert a document
             index: indexName,
             type: 'contact',
@@ -129,6 +157,7 @@ router.route('/contact')
         });
     }); 
 
+
 /*
   Description. PUT method to update contact 
   accessed at http://localhost:8080/contact/:name
@@ -137,24 +166,49 @@ router.route('/contact')
 router.route('/contact/:name')
     .put(function(req, res) {
       input = req.body;
+      my_name = req.params.name;
 
+      // Check if an entry exists or not
+      client.search({       //searching the elasticsearch index
+          index: indexName,
+          type: 'contact',
+          body: {
+              query: {
+                  match: {
+                      name: my_name,
+                  }
+              }
+          }
+      }).then(function (resp) {
+          var results = resp.hits.hits.map(function(hit){
+              return hit._source;
+          });
+          if (!results) {
+            res.status(400).send("No such entry exists");
+            return;
+          }
+      });
+
+      // Update the existing entry
     	client.updateByQuery({ 
           index: indexName,
           type: 'contact',
           body: { 
-              "query": { "match": { "name": input.oldname } }, 
-              "script":  "ctx._source.name =  "+ "'"+input.newname +" ' "+";" 
+            query: {
+                match: {name: my_name}
+            },
+            "script":  "ctx._source.name = "+"'"+input.new_name +"'"+";"+"ctx._source.phone = "+"'"+input.new_phone +"'"+";"+"ctx._source.email = "+"'"+input.new_email +"'"+";"+"ctx._source.address = "+"'"+input.new_address +"'"+";"+"ctx._source.lastname = "+"'"+input.new_lastname +"'"+";"
           }
       }, function(err, response) { 
             if (err) { 
                console.log(err);
                res.sendStatus(500);
-
             } 
             console.log(response);
             res.status(200).send(response);
         })
     });
+
 
 /*
   Description. DELETE method to deleted contact 
@@ -183,9 +237,7 @@ router.route('/contact/:name')
       });    	 
     });
 
-
 module.exports = router;
-
 
 /*
 
@@ -201,5 +253,7 @@ $ curl -H "Content-Type: application/json" -d "{\"name\": \"jon\", \"lastname\":
 DELETE
 $ curl -X DELETE "http://localhost:8080/contact/jon"
 
+UPDATE
+$ curl -H "Content-Type: application/json" -d "{\"oldname\": \"jon\", \"newname\": \"John\"}" -X PUT http://localhost:8080/contact/jon
 
 */
