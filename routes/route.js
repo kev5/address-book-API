@@ -1,6 +1,6 @@
 var elasticsearch = require('elasticsearch');
-var express= require('express');
-var router= express.Router();
+var express = require('express');
+var router = express.Router();
 bodyParser = require('body-parser');
 var client = new elasticsearch.Client({
   host: 'localhost:9200',   //initialize and start the elasticearch server on port 9200
@@ -73,14 +73,14 @@ router.route('/contact')
   .get(function(req, res) {
   var pageNum = parseInt(req.query.page); //parse parameters from the req param
   var perPage = parseInt(req.query.pageSize);
-  var userQuery = parseInt(req.query.query);
+  var userQuery = req.query.query;
   var searchParams = {
     index: indexName,
     from: (pageNum - 1) * perPage,
     size: perPage,
     body: {
             "query": {
-                "match_all": {} // elasticsearch query to return all records
+                "match_all": {query} // elasticsearch query to return all records
             }
          }
   };
@@ -112,6 +112,21 @@ router.route('/contact')
     .post(function(req, res) {
 
     	  var input = req.body;
+
+        // Validate phone number
+        if (input.phone) {
+          if (input.phone.length > 10) {
+            res.status(400).send("Phone number must be 10 digits in length");
+            return;
+          }
+
+          // Check if a valid number
+          var isnum = /^\d+$/.test(input.phone);
+          if (isnum === false) {
+            res.status(400).send("Phone number must contain only digits (0-9)");
+            return;
+          }
+        }
 
         // Check if an entry already exists
         var my_name = req.params.name;

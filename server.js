@@ -8,10 +8,10 @@ app.use(bodyParser.json());
 
 var port = process.env.PORT || 8080;        // setting the port
 
-// Register the routes -------------------------------
+// Register the routes
 app.use('/',route);
 
-// Start the server ---------------------------------
+// Start the server
 app.listen(port);
 
 console.log('Starting AddressBook server on port ' + port);
