@@ -10,24 +10,24 @@ var indexName = 'addressbookindex'   // define app using express
 
 // Default route
 router.get('/', function(req, res) {
-      return client.indices.putMapping({  // initialize the mapping of JSON fields
-        index: indexName,
-        type: "contact",
-        body: {
-            properties: {
-                name: {type: "text"},        // name :  string
-                lastname: {type: "text"},    // lastname:  string
-                phone: { type: "text"},      // phone number: number
-                email: {type: "text" },      // email: sequence of characters
-                address: {type: "text"}      // address: also a keyword
-               }
-        }
+    return client.indices.putMapping({  // initialize the mapping of JSON fields
+      index: indexName,
+      type: "contact",
+      body: {
+          properties: {
+              name: {type: "text"},        // name :  string
+              lastname: {type: "text"},    // lastname:  string
+              phone: { type: "text"},      // phone number: number
+              email: {type: "text" },      // email: sequence of characters
+              address: {type: "text"}      // address: also a keyword
+             }
+      }
     }, function(err, response){
-        if(err){
+        if(err) {
             console.log(err);
             res.sendStatus(500);
         }
-        else{
+        else {
             res.status(200).send({ message: 'Address Book API' }); 
         }
     });
@@ -39,19 +39,19 @@ router.get('/', function(req, res) {
   name is a req-parameter of the GET request
 */
 router.route('/contact/:name')
-   .get( function(req, res) {
-          var input = req.params.name;
+    .get( function(req, res) {
+        var input = req.params.name;
 
-          client.search({       //searching the elasticsearch index
-                index: indexName,
-                type: 'contact',
-                body: {
-                    query: {
-                        query_string:{
-                           query: input // the query string is the name of the contact
-                        }
+        client.search({       //searching the elasticsearch index
+            index: indexName,
+            type: 'contact',
+            body: {
+                query: {
+                    match: {
+                        name: input
                     }
                 }
+            }
         }).then(function (resp) {
              var results = resp.hits.hits.map(function(hit){
                 return hit._source;
@@ -61,7 +61,7 @@ router.route('/contact/:name')
             res.status(200).send(results);
         
         });
-     });
+    });
 
 /*
   Description. GET list of all contacts
@@ -78,10 +78,10 @@ router.route('/contact')
     size: perPage,
     body: {
             "query": {
-            "match_all": {} // elasticsearch query to return all records
+                "match_all": {} // elasticsearch query to return all records
             }
          }
-      };
+  };
   console.log('search parameters', searchParams);
   client.search(searchParams, function (err, resp) {
       if (err) {
@@ -110,23 +110,22 @@ router.route('/contact')
     .post(function(req, res) {
 
     	  var input = req.body;
-            client.index({           //client.index is the elasticsearch.js method to insert a document
-                index: indexName,
-                type: 'contact',
-                body: {
-                        name: input.name, 
-                        lastname: input.lastname,
-                        email: input.email,
-                        phone: parseInt(input.phone),
-                        address: input.address
-                }
+        client.index({           //client.index is the elasticsearch.js method to insert a document
+            index: indexName,
+            type: 'contact',
+            body: {
+                name: input.name, 
+                lastname: input.lastname,
+                email: input.email,
+                phone: parseInt(input.phone),
+                address: input.address
+            }
         }, function (error,response) {
-              if(error) return console.log('ERROR',error);
-              else{
+              if(error) return console.log('ERROR', error);
+              else {
                 console.log(response);
                 res.sendStatus(200);
               }
-
         });
     }); 
 
@@ -137,16 +136,16 @@ router.route('/contact')
 */
 router.route('/contact/:name')
     .put(function(req, res) {
-        input = req.body;
+      input = req.body;
 
-    	 client.updateByQuery({ 
-           index: indexName,
-           type: 'contact',
-           body: { 
+    	client.updateByQuery({ 
+          index: indexName,
+          type: 'contact',
+          body: { 
               "query": { "match": { "name": input.oldname } }, 
               "script":  "ctx._source.name =  "+ "'"+input.newname +" ' "+";" 
-           }
-        }, function(err, response) { 
+          }
+      }, function(err, response) { 
             if (err) { 
                console.log(err);
                res.sendStatus(500);
@@ -154,8 +153,7 @@ router.route('/contact/:name')
             } 
             console.log(response);
             res.status(200).send(response);
-        }
-    )
+        })
     });
 
 /*
@@ -165,24 +163,22 @@ router.route('/contact/:name')
 */
  router.route('/contact/:name')
     .delete(function(req, res) {
-    input = req.params.name;
-    client.deleteByQuery({
-        index: indexName,
-        type: 'contact',
-        body: {
-           query: {
-               match: {name: input}
-           }
-        }
-      }, function (error, response) {
-          
-          if(error){
-            console.log(error);
-            res.sendStatus(500);
+      input = req.params.name;
+      client.deleteByQuery({
+          index: indexName,
+          type: 'contact',
+          body: {
+             query: {
+                 match: {name: input}
+             }
           }
-           
-            else{
-                res.status(200).send(response);
+      }, function (error, response) {      
+            if(error){
+              console.log(error);
+              res.sendStatus(500);
+            } 
+            else {
+              res.status(200).send(response);
             }          
       });    	 
     });
