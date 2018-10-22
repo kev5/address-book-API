@@ -35,7 +35,7 @@ router.get('/', function(req, res) {
 
 
 /*
-  Description. GET details of a contact with the name
+  GET details of a contact with the name
   (accessed at GET http://localhost:8080/contact/:name)
   name is a req-parameter of the GET request
 */
@@ -66,7 +66,7 @@ router.route('/contact/:name')
 
 
 /*
-  Description. GET list of all contacts
+  GET list of all contacts
   (accessed at http://localhost:8080/contact/?pageSize={}&page={}&query={})
 */
 router.route('/contact')
@@ -80,9 +80,13 @@ router.route('/contact')
     size: perPage,
     body: {
             "query": {
-                "match_all": {query} // elasticsearch query to return all records
+            	"bool": {
+            		"must": [
+            		  { "match": {"name": "jon"} } // elasticsearch query to return all records
+            		]
+            	}
             }
-         }
+    }
   };
   console.log('search parameters', searchParams);
   client.search(searchParams, function (err, resp) {
@@ -104,7 +108,7 @@ router.route('/contact')
   
 
 /*
-  Description. POST query for inserting a new contact 
+  POST query for inserting a new contact 
   accessed at http://localhost:8080/contact/  
   al params are passed in the req.body
 */
@@ -174,13 +178,13 @@ router.route('/contact')
 
 
 /*
-  Description. PUT method to update contact 
+  PUT method to update contact 
   accessed at http://localhost:8080/contact/:name
   name is a req-param, the name of the contact to be updated 
 */
 router.route('/contact/:name')
     .put(function(req, res) {
-      input = req.body;
+      var input = req.body;
       my_name = req.params.name;
 
       // Check if an entry exists or not
@@ -214,31 +218,34 @@ router.route('/contact/:name')
             input.new_email = Object.values(results)[0].email;
           if (typeof input.new_lastname === 'undefined' || input.new_lastname === null)
             input.new_lastname = Object.values(results)[0].lastname;
-      });
 
-      // Update the existing entry
-    	client.updateByQuery({
-          index: indexName,
-          type: 'contact',
-          body: {
-            query: {
+          var data = "ctx._source.name = "+"'"+input.new_name+"'"+";"+"ctx._source.phone = "+"'"+input.new_phone+"'"+";"+"ctx._source.email = "+"'"+input.new_email+"'"+";"+"ctx._source.address = "+"'"+input.new_address+"'"+";"+"ctx._source.lastname = "+"'"+input.new_lastname+"'"+";"
+
+          // Update the existing entry
+    	  client.updateByQuery({
+            index: indexName,
+            type: 'contact',
+            body: {
+              query: {
                 match: {name: my_name}
-            },
-            "script": "ctx._source.name = "+"'"+input.new_name+"'"+";"+"ctx._source.phone = "+"'"+input.new_phone+"'"+";"+"ctx._source.email = "+"'"+input.new_email+"'"+";"+"ctx._source.address = "+"'"+input.new_address+"'"+";"+"ctx._source.lastname = "+"'"+input.new_lastname+"'"+";"
-          }
-      }, function(err, response) { 
-            if (err) { 
-               console.log(err);
-               res.sendStatus(500);
+              },
+              "script": data
             }
-            console.log(response);
-            res.status(200).send(response);
-      })
+	      }, function(err, response) { 
+	            if (err) { 
+	               console.log(err);
+	               res.sendStatus(500);
+	            }
+	            console.log(response);
+	            res.status(200).send(response);
+	      })
+
+      });
     });
 
 
 /*
-  Description. DELETE method to deleted contact 
+  DELETE method to deleted contact 
   accessed at http://localhost:8080/contact/:name
   name is a req-param, the name of the contact to be deleted 
 */
